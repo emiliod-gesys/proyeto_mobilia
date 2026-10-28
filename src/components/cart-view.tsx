@@ -106,7 +106,7 @@ export function CartView() {
         </p>
         <p className="mt-3 font-serif text-4xl">{formatPrice(total)}</p>
         <p className="mt-3 text-sm leading-6 text-paper/80">
-          Precios de demostración en pesos mexicanos. El envío y la instalación
+          Precios de demostración en quetzales. El envío y la instalación
           se confirman aparte.
         </p>
         <Link
