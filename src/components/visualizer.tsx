@@ -3,9 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import {
+  AdvancedGuide,
+  type AdvancedGuideHandle,
+} from "@/components/advanced-guide";
 import { useCart } from "@/lib/cart";
-import { getProduct, products, rooms } from "@/lib/products";
+import { getProduct, measuresLabel, products, rooms } from "@/lib/products";
 
 const samples = {
   sala: {
@@ -38,6 +42,8 @@ export function Visualizer() {
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [mode, setMode] = useState<"rapida" | "avanzada">("rapida");
+  const guideRef = useRef<AdvancedGuideHandle>(null);
 
   if (requested !== trackedRequest) {
     setTrackedRequest(requested);
@@ -83,6 +89,38 @@ export function Visualizer() {
       setError("Elige al menos una pieza de tu cotización.");
       return;
     }
+    let roomPayload: { sampleId?: SampleId; roomImage?: string; guided?: boolean };
+    if (mode === "avanzada") {
+      const guide = guideRef.current;
+      if (!guide) {
+        setError("Marca el piso en la foto antes de generar.");
+        return;
+      }
+      const problem = guide.issue();
+      if (problem) {
+        setError(problem);
+        return;
+      }
+      try {
+        const composited = await guide.composite();
+        if (!composited) {
+          setError("No se pudo preparar la foto con las guías.");
+          return;
+        }
+        if (composited.length > 5_500_000) {
+          setError("La foto con guías quedó muy pesada. Prueba con una imagen más pequeña.");
+          return;
+        }
+        roomPayload = { roomImage: composited, guided: true };
+      } catch {
+        setError("No se pudo preparar la foto con las guías.");
+        return;
+      }
+    } else if (room.kind === "sample") {
+      roomPayload = { sampleId: room.id };
+    } else {
+      roomPayload = { roomImage: room.dataUrl };
+    }
     for (const slug of selected) ensure(slug);
     setPending(true);
     setError("");
@@ -94,9 +132,7 @@ export function Visualizer() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productIds: selected,
-          ...(room.kind === "sample"
-            ? { sampleId: room.id }
-            : { roomImage: room.dataUrl }),
+          ...roomPayload,
         }),
       });
       const payload = (await response.json()) as {
@@ -119,23 +155,70 @@ export function Visualizer() {
 
   const previewSrc =
     room.kind === "sample" ? samples[room.id].src : room.dataUrl;
+  const selectedProducts = selected.flatMap((slug) => {
+    const product = getProduct(slug);
+    return product ? [product] : [];
+  });
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
-      <section className="space-y-4">
-        <div className="overflow-hidden rounded-3xl border border-line bg-card">
-          {/* La foto del usuario y el resultado llegan como data URL. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={previewSrc}
-            alt={
-              room.kind === "sample"
-                ? samples[room.id].label
-                : "Foto de tu espacio"
-            }
-            className="aspect-[16/10] w-full object-cover"
-          />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:col-span-2">
+        <div
+          role="group"
+          aria-label="Tipo de generación"
+          className="flex w-fit rounded-full bg-sand p-1"
+        >
+          {(
+            [
+              ["rapida", "Rápida"],
+              ["avanzada", "Avanzada"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={mode === value}
+              className={`rounded-full px-4 py-2 text-sm ${
+                mode === value ? "bg-ink text-paper" : "text-ink"
+              }`}
+              onClick={() => {
+                setMode(value);
+                setError("");
+              }}
+            >
+              {label}
+            </button>
+          ))}
         </div>
+        <p className="max-w-xl text-sm leading-6 text-muted">
+          {mode === "rapida"
+            ? "Coloca las piezas al instante, sin marcar el piso."
+            : "Marca un rectángulo real del piso y el lugar de cada mueble para respetar las medidas."}
+        </p>
+      </div>
+      <section className="space-y-4">
+        {mode === "avanzada" ? (
+          <AdvancedGuide
+            key={previewSrc}
+            ref={guideRef}
+            imageSrc={previewSrc}
+            products={selectedProducts}
+          />
+        ) : (
+          <div className="overflow-hidden rounded-3xl border border-line bg-card">
+            {/* La foto del usuario y el resultado llegan como data URL. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewSrc}
+              alt={
+                room.kind === "sample"
+                  ? samples[room.id].label
+                  : "Foto de tu espacio"
+              }
+              className="aspect-[16/10] w-full object-cover"
+            />
+          </div>
+        )}
         <div className="flex flex-wrap gap-2">
           {(Object.keys(samples) as SampleId[]).map((id) => {
             const active = room.kind === "sample" && room.id === id;
@@ -246,6 +329,9 @@ export function Visualizer() {
                       </span>
                       <span className="block truncate font-medium">
                         {product.name}
+                      </span>
+                      <span className="block text-sm text-muted">
+                        {measuresLabel(product)}
                       </span>
                     </span>
                     <span

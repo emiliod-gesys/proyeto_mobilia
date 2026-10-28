@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AddToCart } from "@/components/add-to-cart";
 import { formatPrice } from "@/lib/format";
-import { rooms, type Product } from "@/lib/products";
+import { measuresLabel, rooms, type Product } from "@/lib/products";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
@@ -24,6 +24,7 @@ export function ProductCard({ product }: { product: Product }) {
           <h3 className="mt-1 font-serif text-2xl leading-tight">
             <Link href={`/producto/${product.slug}`}>{product.name}</Link>
           </h3>
+          <p className="mt-1 text-sm text-muted">{measuresLabel(product)}</p>
         </div>
         <p className="text-sm leading-6 text-muted">{product.blurb}</p>
         <div className="mt-auto flex items-center justify-between gap-3 pt-2">

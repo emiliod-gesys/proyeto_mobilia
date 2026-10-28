@@ -18,6 +18,7 @@ type VisualizeBody = {
   productIds?: unknown;
   sampleId?: unknown;
   roomImage?: unknown;
+  guided?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -70,18 +71,34 @@ export async function POST(request: Request) {
     }),
   );
 
+  const guided = body.guided === true;
   const instructions = [
-    "Edit the first photograph. It is the customer's real room and must stay recognizable.",
-    "Place only the furniture described below, using the later images as visual references.",
+    ...(guided
+      ? [
+          "The first photograph includes colored measurement guides. They are instructions, not physical objects.",
+          "The yellow quadrilateral is a floor rectangle. Its labels are that rectangle's real size in centimeters, and edge 1–2 is the edge closest to the camera.",
+          "Each other colored outline is one product's footprint at its real size. The vertical line is that product's height.",
+          "Place each product strictly inside its own outline, with the same perspective, then erase every guide, dot, and text label.",
+        ]
+      : [
+          "Edit the first photograph. It is the customer's real room and must stay recognizable.",
+          "Place only the furniture described below, using the later images as visual references.",
+          "Use the stated centimeter sizes as the intended real size, keeping each piece plausible in the room.",
+        ]),
     "Preserve architecture, windows, walls, floor, camera angle, and lighting.",
-    "Match perspective, scale, contact shadows, and color temperature.",
+    "Match perspective, contact shadows, and color temperature.",
     "Do not paste the product photo's background, text, logos, or extra furniture.",
     "Return one photorealistic photograph of the same room with those products installed.",
     "",
-    ...productFiles.map(
-      (item, index) =>
-        `Reference image ${index + 2}: ${item.product.name}. Place ${item.product.placement}. Measures: ${item.product.measures}.`,
-    ),
+    ...productFiles.map((item, index) => {
+      const round = item.product.roundTop
+        ? " Its footprint is the round top; chairs stay outside it."
+        : "";
+      const fit = guided
+        ? " Fit it inside the matching colored outline and vertical height line."
+        : "";
+      return `Reference image ${index + 2}: ${item.product.name}. Place ${item.product.placement}. Real size: ${item.product.widthCm} cm wide, ${item.product.depthCm} cm deep, ${item.product.heightCm} cm high.${round}${fit}`;
+    }),
   ].join("\n");
 
   try {
@@ -136,6 +153,13 @@ export async function POST(request: Request) {
 }
 
 async function readRoom(body: VisualizeBody) {
+  if (body.guided === true) {
+    if (typeof body.roomImage !== "string") {
+      throw new Error("La generación avanzada necesita la foto con las guías.");
+    }
+    return decodeRoom(body.roomImage);
+  }
+
   if (typeof body.sampleId === "string" && body.sampleId in samples) {
     const fileName = samples[body.sampleId as SampleId];
     const data = await readFile(
@@ -147,12 +171,16 @@ async function readRoom(body: VisualizeBody) {
   if (typeof body.roomImage !== "string") {
     throw new Error("Sube una foto o elige un espacio de ejemplo.");
   }
-  if (body.roomImage.length > 6_000_000) {
+  return decodeRoom(body.roomImage);
+}
+
+function decodeRoom(roomImage: string) {
+  if (roomImage.length > 6_000_000) {
     throw new Error("La foto es demasiado pesada. Prueba con una imagen más pequeña.");
   }
 
   const match = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=\s]+)$/.exec(
-    body.roomImage,
+    roomImage,
   );
   if (!match) {
     throw new Error("La foto debe ser JPG, PNG o WebP.");

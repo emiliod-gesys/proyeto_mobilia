@@ -56,16 +56,24 @@ async function ProductDetails({ params }: ProductPageProps) {
         <h1 className="mt-2 font-serif text-5xl leading-tight">{product.name}</h1>
         <p className="mt-4 text-2xl">{formatPrice(product.price)}</p>
         <p className="mt-4 max-w-md text-lg leading-8 text-muted">{product.details}</p>
-        <dl className="mt-6 grid max-w-md grid-cols-2 gap-4 text-sm">
+        <dl className="mt-6 grid max-w-md grid-cols-3 gap-4 text-sm">
           <div>
-            <dt className="text-muted">Material</dt>
-            <dd className="mt-1">{product.material}</dd>
+            <dt className="text-muted">Ancho</dt>
+            <dd className="mt-1">{product.widthCm} cm</dd>
           </div>
           <div>
-            <dt className="text-muted">Medidas</dt>
-            <dd className="mt-1">{product.measures}</dd>
+            <dt className="text-muted">Fondo</dt>
+            <dd className="mt-1">{product.depthCm} cm</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Alto</dt>
+            <dd className="mt-1">{product.heightCm} cm</dd>
           </div>
         </dl>
+        <p className="mt-3 text-sm text-muted">
+          Material: {product.material}. El ancho es el frente; el fondo es la
+          profundidad.
+        </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <AddToCart slug={product.slug} />
           <ViewInSpace slug={product.slug} />

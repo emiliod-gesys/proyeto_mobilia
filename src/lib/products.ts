@@ -14,10 +14,17 @@ export type Product = {
   blurb: string;
   details: string;
   material: string;
-  measures: string;
+  widthCm: number;
+  depthCm: number;
+  heightCm: number;
+  roundTop?: boolean;
   placement: string;
   image: string;
 };
+
+export function measuresLabel(product: Product) {
+  return `${product.widthCm} × ${product.depthCm} × ${product.heightCm} cm`;
+}
 
 export const products: Product[] = [
   {
@@ -29,7 +36,9 @@ export const products: Product[] = [
     details:
       "Respaldo bajo y cojines sueltos. Funciona como pieza principal frente a una mesa de centro.",
     material: "Terciopelo y patas de madera",
-    measures: "210 × 86 × 82 cm",
+    widthCm: 210,
+    depthCm: 86,
+    heightCm: 82,
     placement:
       "a three-seat teal velvet sofa with loose back cushions, cylindrical bolsters, and tapered wooden legs",
     image: "/muebles/sofa-selva.jpg",
@@ -43,7 +52,9 @@ export const products: Product[] = [
     details:
       "Una pieza ligera para el rincón de lectura o junto al sofá. El tapiz es claro y fácil de combinar.",
     material: "Tela capitoné y madera pintada",
-    measures: "78 × 74 × 82 cm",
+    widthCm: 78,
+    depthCm: 74,
+    heightCm: 82,
     placement:
       "a cream button-tufted armchair with a rounded back and white turned wooden legs",
     image: "/muebles/sillon-nube.jpg",
@@ -57,7 +68,9 @@ export const products: Product[] = [
     details:
       "Ilumina un sillón o la esquina de la sala sin ocupar mucho piso. El acabado es mate.",
     material: "Metal pintado",
-    measures: "45 × 160 cm",
+    widthCm: 45,
+    depthCm: 45,
+    heightCm: 160,
     placement:
       "a matte charcoal floor lamp with a large industrial dome shade and a slim curved stem",
     image: "/muebles/lampara-taller.jpg",
@@ -71,7 +84,9 @@ export const products: Product[] = [
     details:
       "Estructura sencilla de cuatro patas. Se ve bien junto a una consola o al final del sofá.",
     material: "Madera de fresno",
-    measures: "36 × 36 × 63 cm",
+    widthCm: 36,
+    depthCm: 36,
+    heightCm: 63,
     placement:
       "a pale ash wooden stool with four straight legs, a square seat, and a handle cutout",
     image: "/muebles/banco-clara.jpg",
@@ -83,9 +98,11 @@ export const products: Product[] = [
     price: 24600,
     blurb: "Cama king con cabecera alta abotonada y ropa de cama neutra.",
     details:
-      "La cabecera es el gesto de la recámara. En la vista previa se coloca la cama, no los burós de la foto.",
+      "La cabecera llega a 130 cm de alto. En la vista previa se coloca la cama, no los burós de la foto.",
     material: "Tapiz capitoné y base tapizada",
-    measures: "193 × 203 cm",
+    widthCm: 193,
+    depthCm: 203,
+    heightCm: 130,
     placement:
       "only the cream diamond-tufted wingback bed with layered gray bedding. Do not copy the nightstands, lamps, bench, or windows from the product photo",
     image: "/muebles/cama-alba.jpg",
@@ -99,7 +116,10 @@ export const products: Product[] = [
     details:
       "Para un comedor pequeño o un desayunador. La vista coloca la mesa y sus sillas blancas.",
     material: "Cubierta blanca y patas de madera",
-    measures: "Ø 100 × 75 cm",
+    widthCm: 100,
+    depthCm: 100,
+    heightCm: 75,
+    roundTop: true,
     placement:
       "a round white dining table with light wooden legs and matching white molded chairs",
     image: "/muebles/mesa-nordica.jpg",
@@ -113,7 +133,9 @@ export const products: Product[] = [
     details:
       "Se vende por pieza. Combina con mesas claras y ocupa poco espacio visual.",
     material: "Polipropileno y madera",
-    measures: "48 × 54 × 82 cm",
+    widthCm: 48,
+    depthCm: 54,
+    heightCm: 82,
     placement:
       "a black molded shell dining chair with a cushioned seat and four angled wooden legs",
     image: "/muebles/silla-negra.jpg",
@@ -127,7 +149,9 @@ export const products: Product[] = [
     details:
       "Una pieza con carácter para la cabecera de la mesa o un rincón del comedor.",
     material: "Madera maciza",
-    measures: "58 × 55 × 104 cm",
+    widthCm: 58,
+    depthCm: 55,
+    heightCm: 104,
     placement:
       "a vintage golden-oak armchair with a slatted back, low arms, and turned front legs",
     image: "/muebles/silla-antigua.jpg",
